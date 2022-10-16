@@ -14,8 +14,7 @@ setup(
     author_email='agardelakos@gmail.com',
     description="POMatory: Automatically find locators for web elements that can be used in selenium projects",
     long_description_content_type="text/markdown",
-    packages=setuptools.find_packages(),
-    # py_modules=['pomatory.app'],
+    packages=setuptools.find_packages(include='pomatory.find_locators'),
     entry_points={
         'console_scripts': ['pomatory=pomatory.app:main_menu'],
     },
