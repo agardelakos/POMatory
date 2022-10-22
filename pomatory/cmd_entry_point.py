@@ -1,8 +1,10 @@
+import os
 import sys
 import logging
 import argparse
 from selenium import webdriver
 from setup_logger import logger
+from pomatory.pomatory import Pomatory
 
 driver = webdriver
 
@@ -74,11 +76,17 @@ def main():
                         help='[Optional] Password to login. ',
                         type=str
                         )
-    parser.add_argument('-w', '--web_driver',
-                        dest='web_driver_download',
-                        help='Whether to try to download the appropriate webdriver for the specified browser. '
-                             'default: False',
-                        default=False,
+    parser.add_argument('-d', '--destination_path',
+                        dest='save_path',
+                        help='[Optional] The path for the newly created file(s). Default: current',
+                        default=os.getcwd(),
+                        type=str
+                        )
+    parser.add_argument('-s', '--single_entries',
+                        dest='single_locator',
+                        help='The output of the locators. True for one line entries. False for dict with all '
+                             'locators for a specific web element. Default: True',
+                        default=True,
                         type=bool
                         )
     # TODO: Below are future improvements
@@ -95,6 +103,14 @@ def main():
                              'default: False.'
                         )
 
+    parser.add_argument('-w', '--web_driver',
+                        dest='web_driver_download',
+                        help='Whether to try to download the appropriate webdriver for the specified browser. '
+                             'default: False',
+                        default=False,
+                        type=bool
+                        )
+
     run(parser.parse_args())
 
 
@@ -107,6 +123,8 @@ def run(args):
     logger.info("test")
     set_up_webdriver(args=args)
     logger.info(f'The host is "{args.base_url}"')
+    global driver
+    Pomatory(driver=driver, folder_path=args.destination_path, return_single=args.single_locator)
     clean_up()
 
 

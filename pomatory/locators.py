@@ -1,14 +1,14 @@
-from pomatory.setup_logger import logger
 import os
 import re
 from bs4 import PageElement
 from bs4 import BeautifulSoup
 import pomatory.selenium_functions as sf
+from pomatory.setup_logger import logger
 
 driver = None
 
 
-def find_locators(webdriver, check_ids=False):
+def find_locators(webdriver, check_ids=False, folder_path=os.getcwd(), return_single=False):
     global driver
     driver = webdriver
     # TODO: needs refactoring in order to search for 'div' as well
@@ -90,8 +90,18 @@ def find_locators(webdriver, check_ids=False):
                          file_name=format_filename(sf.get_current_url(driver)))
 
 
-def recursive_reverse_search_locators(locator_string, element_type, web_element, parent_locator_string=None,
-                                      parent_element_type=None):
+def recursive_reverse_search_locators(locator_string: str, element_type: str, web_element: PageElement,
+                                      parent_locator_string: str = None, parent_element_type: str = None) -> str:
+    """
+
+    :param locator_string:
+    :param element_type:
+    :param web_element:
+    :param parent_locator_string:
+    :param parent_element_type:
+    :return:
+    """
+
     xpath_to_check, par_el, par_type = construct_xpath_locator(web_element=web_element,
                                                                locator_string=locator_string,
                                                                element_type=element_type,
@@ -155,8 +165,6 @@ def construct_xpath_locator(web_element: PageElement, locator_string=None, eleme
         logger.debug("no parent.")
         if locator_string:
             logger.debug("3")
-            # print(locator_string)
-            # print(element_type)
             res = xpath_locator_format.format(element_type, locator_string)
         else:
             logger.debug("4")
@@ -165,11 +173,11 @@ def construct_xpath_locator(web_element: PageElement, locator_string=None, eleme
     return res, parent_element, parent_element_type
 
 
-def is_unique_locator(locator, locator_type='id'):
+def is_unique_locator(locator: str, locator_type: str = 'id') -> bool:
     """
-
-    :param locator:
-    :param locator_type:
+    Checks if the provided locator identifies uniquely a web element
+    :param locator: any type of locator
+    :param locator_type: locator_type supported are described in locator_types dict in selenium_functions.py
     :return:
     """
     global driver
@@ -182,13 +190,13 @@ def is_unique_locator(locator, locator_type='id'):
         return False
 
 
-def format_filename(text):
+def format_filename(text: str) -> str:
     """
-    Take a string and return a valid filename constructed from the string.
-    Uses a whitelist approach: any characters not present in valid_chars are
-    removed. Also, spaces are replaced with underscores.
-    :param text:
-    :return:
+    Takes a string (intended use is url) and returns a valid filename constructed from the string.
+    Uses a whitelist approach: any characters not present in valid_chars are removed.
+    Also, spaces are replaced with underscores. TODO: duplicate from to_camel_case()?
+    :param text: str to format
+    :return: a str that is ready to be used as a filename TODO: move concat of 'page' elsewhere
     """
     filename_parts = text.split('/')
     filename_parts_valid = []
@@ -210,11 +218,11 @@ def format_filename(text):
     return filename + "page"
 
 
-def to_camel_case(text):
+def to_camel_case(text: str) -> str:
     """
-
-    :param text:
-    :return:
+    Replaces the '-' character to '_' and returns the text in came case format
+    :param text: the text to change
+    :return: str in the camel case format
     """
     s = text.replace("-", " ").replace("_", " ")
     s = s.split()
@@ -223,11 +231,12 @@ def to_camel_case(text):
     return ''.join(i.capitalize() for i in s[0:])
 
 
-def create_file(filename=""):
+def create_file(filename: str = "") -> str:
     """
-
-    :param filename:
-    :return:
+    Creates a .py file with the provided file name
+    :param filename: name of the file to be created. If it already exists adds _.
+    TODO: maybe remove and instead write to the existing file
+    :return: a str with the path of the file (including the ending of the file)
     """
     from os.path import exists
 
@@ -243,15 +252,15 @@ def create_file(filename=""):
         logger.error("Failed to create file: {}. {}".format(filename, str(e)))
 
 
-def write_to_python_file(locator_dict, file_name, class_to_inherit_from=""):
+def write_to_python_file(locator_dict: dict, file_name: str, class_to_inherit_from: str =""):
     """
-
-    :param locator_dict:
-    :param file_name:
-    :param class_to_inherit_from:
-    :return:
+    Creates and write the locator dictionary to a file with ending .py
+    :param locator_dict: all the locators that are meant to be written to the file
+    :param file_name: name of the file to create
+    :param class_to_inherit_from: TODO: probably delete
+    :return: nothing
     """
-    # TODO: add import for the class to inherit from
+    # TODO: think if we should add import for the class to inherit from
     if class_to_inherit_from:
         python_file_template = "class {0}({1}):\n    \"\"\"Locators \"\"\"\n".format(to_camel_case(file_name),
                                                                                      class_to_inherit_from)
@@ -272,5 +281,10 @@ def write_to_python_file(locator_dict, file_name, class_to_inherit_from=""):
         fileToWrite.close()
 
 
-def add_contains_text(text):
+def add_contains_text(text: str) -> str:
+    """
+    simple function to construct the contains text locator with the str provided
+    :param text: the str to add to the locator
+    :return: str with the proper format of the locator
+    """
     return "[contains(text(), \'{}\')]".format(text)

@@ -1,4 +1,5 @@
 from selenium.webdriver.common.by import By
+from selenium import webdriver
 
 locator_types = {
     "id": By.ID,
@@ -7,10 +8,10 @@ locator_types = {
 }
 
 
-def get_list_of_elements(driver, locator, locator_type="id") -> list:
+def get_list_of_elements(driver: webdriver, locator: str, locator_type: str = "id") -> list:
     """
     Finds all elements that have the specific locator and returns them as a list
-    :param driver:
+    :param driver: the webdriver to use
     :param locator: any type of locator
     :param locator_type: locator_type supported are described in locator_types dict
     :return: a list with all elements that can be found with the specific locator
@@ -18,10 +19,10 @@ def get_list_of_elements(driver, locator, locator_type="id") -> list:
     return driver.find_elements(by=locator_types[locator_type], value=locator)
 
 
-def get_text_of_elements(driver, locator, locator_type="id") -> list:
+def get_text_of_elements(driver: webdriver, locator: str, locator_type: str = "id") -> list:
     """
     Finds all element texts that have the specific locator and returns them as a list
-    :param driver:
+    :param driver: the webdriver to use
     :param locator: any type of locator
     :param locator_type: locator_type supported are described in locator_types dict
     :return: a list with all texts that can be found with the specific locator. "0" if no texts found
@@ -35,10 +36,10 @@ def get_text_of_elements(driver, locator, locator_type="id") -> list:
     return elements_names if elements_names else ['0']
 
 
-def get_current_url(driver) -> str:
+def get_current_url(driver: webdriver) -> str:
     """
-
-    :param driver:
-    :return:
+    Gets the current url from the web driver provided
+    :param driver: the webdriver to use
+    :return: a str with the current url
     """
     return driver.current_url
