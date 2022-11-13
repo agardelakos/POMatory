@@ -1,6 +1,6 @@
 import sys
-from setuptools import setup
-import setuptools
+from setuptools import setup, find_packages
+from pathlib import Path
 
 if sys.version_info < (3, 6):
     sys.exit('Sorry, POMatory requires Python >= 3.6')
@@ -13,10 +13,12 @@ setup(
     author='agardelakos',
     author_email='agardelakos@gmail.com',
     description="POMatory: Automatically find locators for web elements that can be used in selenium projects",
+    long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
-    packages=setuptools.find_packages(include='pomatory.find_locators'),
+    platform="any",
+    packages=find_packages(),
     entry_points={
-        'console_scripts': ['pomatory=pomatory.app:main_menu'],
+        'console_scripts': ['pomatory=pomatory.manage:main'],
     },
     classifiers=[
         "Programming Language :: Python :: 3",

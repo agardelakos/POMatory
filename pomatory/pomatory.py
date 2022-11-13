@@ -13,5 +13,3 @@ class Pomatory:
 
     def find_locators(self):
         loc.find_locators(webdriver=self.driver, folder_path=self.folder_path, return_single=self.return_single)
-
-

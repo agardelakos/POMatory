@@ -3,7 +3,7 @@ import sys
 import logging
 import argparse
 from selenium import webdriver
-from setup_logger import logger
+from pomatory.setup_logger import logger
 from pomatory.pomatory import Pomatory
 
 driver = webdriver
@@ -128,5 +128,9 @@ def run(args):
     clean_up()
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.stderr.write("User interrupt!\n")
+        sys.exit(0)
