@@ -44,18 +44,21 @@ def set_up_webdriver(args=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Welcome to POMatory!'
+    parser = argparse.ArgumentParser(prog='POMatory',
+                                     description='Welcome to POMatory!'
                                                  ' A tool to help you automate the boring work of locating '
                                                  'elements in a web page for your Automation Framework according'
                                                  ' to the POM architecture')
     parser.add_argument('-t', '--types',
                         dest='html_element_to_look_for_ids',
+                        choices=['[\'input\', \'button\']'],
                         default=['input', 'button'],
                         help='Types of html elements to look for. '
                         )
     parser.add_argument('--url',
                         dest='base_url',
                         help='URL to start looking for locators.',
+                        required=True,
                         type=str
                         )
     parser.add_argument('-b', '--browser',
@@ -63,22 +66,26 @@ def main():
                         help='Browser to use for the selenium navigation. '
                              'Available options: chrome, firefox. '
                              'default: firefox',
+                        choices=['firefox', 'chrome'],
                         default="firefox",
                         type=str
                         )
     parser.add_argument('-u', '--username',
                         dest='username',
                         help='[Optional] Username to login. ',
+                        required=False,
                         type=str
                         )
     parser.add_argument('-p', '--password',
                         dest='password',
                         help='[Optional] Password to login. ',
+                        required=False,
                         type=str
                         )
     parser.add_argument('-d', '--destination_path',
                         dest='save_path',
                         help='[Optional] The path for the newly created file(s). Default: current',
+                        required=False,
                         default=os.getcwd(),
                         type=str
                         )
@@ -124,7 +131,7 @@ def run(args):
     set_up_webdriver(args=args)
     logger.info(f'The host is "{args.base_url}"')
     global driver
-    Pomatory(driver=driver, folder_path=args.destination_path, return_single=args.single_locator)
+    Pomatory(driver=driver, folder_path=args.save_path, return_single=args.single_locator)
     clean_up()
 
 
