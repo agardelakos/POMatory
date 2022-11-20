@@ -8,46 +8,65 @@ from pomatory.setup_logger import logger
 driver = None
 
 
-def find_locators(webdriver, check_ids=False, folder_path=os.getcwd(), return_single=False):
+def find_locators(webdriver, check_ids=False, folder_path=os.getcwd(), return_single=False,
+                  html_element_to_look_for_ids=None):
+    if html_element_to_look_for_ids is None:
+        # TODO: needs refactoring in order to search for 'div' as well.
+        html_element_to_look_for_ids = ['input', 'button']  # , 'div']
+
     global driver
     driver = webdriver
-    # TODO: needs refactoring in order to search for 'div' as well
-    html_element_to_look_for_ids = ['input', 'button']  # , 'div']
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, 'html.parser')
-    id_list = []
+    id_list = {}
 
     if check_ids:
-        """ finding ids """
-        # name_list = []
-        for el in html_element_to_look_for_ids:
-            tags = soup.find_all(el)
-            for tag in tags:
-                try:
-                    if tag['id']:
-                        if is_unique_locator(tag['id'], 'id'):
-                            id_list.append(tag['id'])
-                            logger.info("id for {} found={}".format(el, str(tag['id'])))
-                    # TODO: add logic for name selector_type
-                    # if tag['name']:
-                    #     if self.is_unique_locator(tag['name'], 'name'):
-                    #         name_list.append(tag['name'])
-                    #         self.logger.info("name for {} found={}".format(el, str(tag['name'])))
-                except KeyError:
-                    logger.info("no key found for: {}".format(el))
-        # self.write_to_python_file(locator_dict={"id": id_list, "name": name_list},
-        #                           file_name=self.format_filename(str(self.driver.current_url)))
+        id_list = retrieve_ids(html_element_to_look_for_ids, soup)
+        logger.info(f"ID_list: {str(id_list)}")
 
     # """ finding/constructing xpaths"""
-    xpaths_list = []
-    # for el in html_element_to_look_for_ids:
-    # element_class_xpath = ""
+    xpaths_list = retrieve_xpaths(html_element_to_look_for_ids, soup)
+    logger.info(f"XPATHs_list: {str(xpaths_list)}")
 
+    write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
+                         file_name=format_filename(sf.get_current_url(driver)))
+
+
+def retrieve_ids(html_element_to_look_for_ids, soup) -> list:
+    """
+    Finding ids
+    @param html_element_to_look_for_ids:
+    @param soup:
+    :return: list with ids
+    """
+    id_list = []
+
+    for el in html_element_to_look_for_ids:
+        tags = soup.find_all(el)
+        for tag in tags:
+            try:
+                if tag['id']:
+                    if is_unique_locator(tag['id'], 'id'):
+                        id_list.append(tag['id'])
+                        logger.info(f"ID for element: {el} found={str(tag['id'])}")
+            except KeyError:
+                logger.info(f"No key found for: {el}")
+    return id_list
+
+
+def retrieve_xpaths(html_element_to_look_for_ids, soup) -> list:
+    """
+    Finding/constructing xpaths
+
+    @param html_element_to_look_for_ids:
+    @param soup:
+    :return: list with xpaths
+    """
+    xpaths_list = []
     for el in html_element_to_look_for_ids:
         tags2 = soup.find_all(name=el, attrs={'id': None, 'class': re.compile("^null|$")})
 
         for tag in tags2:
-            logger.debug("############")
             elem, parent, parent_type = construct_xpath_locator(web_element=tag, locator_string=tag['class'],
                                                                 element_type=el)
 
@@ -85,20 +104,18 @@ def find_locators(webdriver, check_ids=False, folder_path=os.getcwd(), return_si
                                                              parent_element_type=tag.findParent().name)
                     if elem:
                         xpaths_list.append(elem)
-
-    write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
-                         file_name=format_filename(sf.get_current_url(driver)))
+    return xpaths_list
 
 
 def recursive_reverse_search_locators(locator_string: str, element_type: str, web_element: PageElement,
                                       parent_locator_string: str = None, parent_element_type: str = None) -> str:
     """
 
-    :param locator_string:
-    :param element_type:
-    :param web_element:
-    :param parent_locator_string:
-    :param parent_element_type:
+    @param locator_string:
+    @param element_type:
+    @param web_element:
+    @param parent_locator_string:
+    @param parent_element_type:
     :return:
     """
 
@@ -132,12 +149,12 @@ def construct_xpath_locator(web_element: PageElement, locator_string=None, eleme
                             parent_locator_string="", parent_element_type: str = "div"):
     """
     Constructs a str ready to be written to file
-    :param web_element:
-    :param parent_element_type: the parent's WebElement type (e.g. div, button, input)
-    :param parent_locator_string: can be list or str. to be added on the front of the xpath with the usual format
-    :param locator_string: the str for the class. can be list or single str. Will add this in the usual format of
+    @param web_element:
+    @param parent_element_type: the parent's WebElement type (e.g. div, button, input)
+    @param parent_locator_string: can be list or str. to be added on the front of the xpath with the usual format
+    @param locator_string: the str for the class. can be list or single str. Will add this in the usual format of
     locators
-    :param element_type: the WebElement type (e.g. div, button, input)
+    @param element_type: the WebElement type (e.g. div, button, input)
     :return: A str and a PageElement of the parent with that is ready to be used as a locator
     """
     xpath_locator_format = "//{}[@class=\'{}\']"
@@ -176,8 +193,8 @@ def construct_xpath_locator(web_element: PageElement, locator_string=None, eleme
 def is_unique_locator(locator: str, locator_type: str = 'id') -> bool:
     """
     Checks if the provided locator identifies uniquely a web element
-    :param locator: any type of locator
-    :param locator_type: locator_type supported are described in locator_types dict in selenium_functions.py
+    @param locator: any type of locator
+    @param locator_type: locator_type supported are described in locator_types dict in selenium_functions.py
     :return:
     """
     global driver
@@ -195,7 +212,7 @@ def format_filename(text: str) -> str:
     Takes a string (intended use is url) and returns a valid filename constructed from the string.
     Uses a whitelist approach: any characters not present in valid_chars are removed.
     Also, spaces are replaced with underscores. TODO: duplicate from to_camel_case()?
-    :param text: str to format
+    @param text: str to format
     :return: a str that is ready to be used as a filename TODO: move concat of 'page' elsewhere
     """
     filename_parts = text.split('/')
@@ -221,7 +238,7 @@ def format_filename(text: str) -> str:
 def to_camel_case(text: str) -> str:
     """
     Replaces the '-' character to '_' and returns the text in came case format
-    :param text: the text to change
+    @param text: the text to change
     :return: str in the camel case format
     """
     s = text.replace("-", " ").replace("_", " ")
@@ -234,7 +251,7 @@ def to_camel_case(text: str) -> str:
 def create_file(filename: str = "") -> str:
     """
     Creates a .py file with the provided file name
-    :param filename: name of the file to be created. If it already exists adds _.
+    @param filename: name of the file to be created. If it already exists adds _.
     TODO: maybe remove and instead write to the existing file
     :return: a str with the path of the file (including the ending of the file)
     """
@@ -252,12 +269,12 @@ def create_file(filename: str = "") -> str:
         logger.error("Failed to create file: {}. {}".format(filename, str(e)))
 
 
-def write_to_python_file(locator_dict: dict, file_name: str, class_to_inherit_from: str =""):
+def write_to_python_file(locator_dict: dict, file_name: str, class_to_inherit_from: str = ""):
     """
     Creates and write the locator dictionary to a file with ending .py
-    :param locator_dict: all the locators that are meant to be written to the file
-    :param file_name: name of the file to create
-    :param class_to_inherit_from: TODO: probably delete
+    @param locator_dict: all the locators that are meant to be written to the file
+    @param file_name: name of the file to create
+    @param class_to_inherit_from: TODO: probably delete
     :return: nothing
     """
     # TODO: think if we should add import for the class to inherit from
@@ -284,7 +301,7 @@ def write_to_python_file(locator_dict: dict, file_name: str, class_to_inherit_fr
 def add_contains_text(text: str) -> str:
     """
     simple function to construct the contains text locator with the str provided
-    :param text: the str to add to the locator
+    @param text: the str to add to the locator
     :return: str with the proper format of the locator
     """
     return "[contains(text(), \'{}\')]".format(text)
