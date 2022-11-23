@@ -2,7 +2,7 @@ import os
 import re
 from bs4 import PageElement
 from bs4 import BeautifulSoup
-from pomatory.setup_logger import Logger
+from pomatory.logger import Logger
 
 
 class Locators:
@@ -11,8 +11,9 @@ class Locators:
         self.logger = log.logger
         self.driver = self.driver_inst.driver
 
-    def find_locators(self, check_ids: bool = True, save_path: str = "", return_single: bool = False,
-                      html_element_types: list = None):
+    # TODO: add logic for save_path and return_single
+    def find_locators(self, check_ids: bool = True, html_element_types: list = None, save_path: str = "",
+                      return_single: bool = False):
         self.logger.info("test")
 
         if html_element_types is None:
@@ -25,18 +26,18 @@ class Locators:
 
         # finding IDs
         if check_ids:
-            id_list = self.retrieve_ids(html_element_types, soup)
+            id_list = self._retrieve_ids(html_element_types, soup)
             self.logger.info(f"ID_list: {str(id_list)}")
 
         # finding/constructing xpaths
-        xpaths_list = self.retrieve_xpaths(html_element_types, soup)
+        xpaths_list = self._retrieve_xpaths(html_element_types, soup)
         self.logger.info(f"XPATHs_list: {str(xpaths_list)}")
 
         # Writing to file
-        self.write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
-                                  file_name=self.format_filename(self.driver_inst.get_current_url()))
+        self._write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
+                                   file_name=self._format_filename(self.driver_inst.get_current_url()))
 
-    def retrieve_ids(self, html_element_to_look_for_ids, soup) -> list:
+    def _retrieve_ids(self, html_element_to_look_for_ids, soup) -> list:
         """
         Finding ids
         @param html_element_to_look_for_ids:
@@ -49,14 +50,14 @@ class Locators:
             for tag in tags:
                 try:
                     if tag['id']:
-                        if self.is_unique_locator(tag['id'], 'id'):
+                        if self._is_unique_locator(tag['id'], 'id'):
                             id_list.append(tag['id'])
                             self.logger.info(f"ID for element: {el} found={str(tag['id'])}")
                 except KeyError:
                     self.logger.info(f"No key found for: {el}")
         return id_list
 
-    def retrieve_xpaths(self, html_element_to_look_for_ids, soup) -> list:
+    def _retrieve_xpaths(self, html_element_to_look_for_ids, soup) -> list:
         """
         Finding/constructing xpaths
 
@@ -69,10 +70,10 @@ class Locators:
             tags2 = soup.find_all(name=el, attrs={'id': None, 'class': re.compile("^null|$")})
 
             for tag in tags2:
-                elem, parent, parent_type = self.construct_xpath_locator(web_element=tag, locator_string=tag['class'],
-                                                                         element_type=el)
+                elem, parent, parent_type = self._construct_xpath_locator(web_element=tag, locator_string=tag['class'],
+                                                                          element_type=el)
 
-                if self.is_unique_locator(locator=elem, locator_type="xpath"):
+                if self._is_unique_locator(locator=elem, locator_type="xpath"):
                     xpaths_list.append(elem)
                 else:
                     number_of_multiple_elements = 1
@@ -86,9 +87,9 @@ class Locators:
                         if text_elements:
                             self.logger.debug("Trying Adding name")
                             for text in text_elements:
-                                temp_xpath = elem + self.add_contains_text(text)
-                                if self.is_unique_locator(locator=temp_xpath,
-                                                          locator_type="xpath") and temp_xpath not in xpaths_list:
+                                temp_xpath = elem + self._add_contains_text(text)
+                                if self._is_unique_locator(locator=temp_xpath,
+                                                           locator_type="xpath") and temp_xpath not in xpaths_list:
                                     xpaths_list.append(temp_xpath)
                                     number_of_multiple_elements = number_of_multiple_elements - 1
 
@@ -100,16 +101,16 @@ class Locators:
                     if number_of_multiple_elements > 0:
                         self.logger.debug("Trying recursively with parents...")
 
-                        elem = self.recursive_reverse_search_locators(web_element=tag, locator_string=elem,
-                                                                      element_type=el,
-                                                                      parent_locator_string=tag.findParent()['class'],
-                                                                      parent_element_type=tag.findParent().name)
+                        elem = self._recursive_reverse_search_locators(web_element=tag, locator_string=elem,
+                                                                       element_type=el,
+                                                                       parent_locator_string=tag.findParent()['class'],
+                                                                       parent_element_type=tag.findParent().name)
                         if elem:
                             xpaths_list.append(elem)
         return xpaths_list
 
-    def recursive_reverse_search_locators(self, locator_string: str, element_type: str, web_element: PageElement,
-                                          parent_locator_string: str = None, parent_element_type: str = None) -> str:
+    def _recursive_reverse_search_locators(self, locator_string: str, element_type: str, web_element: PageElement,
+                                           parent_locator_string: str = None, parent_element_type: str = None) -> str:
         """
 
         @param locator_string:
@@ -120,33 +121,33 @@ class Locators:
         :return:
         """
 
-        xpath_to_check, par_el, par_type = self.construct_xpath_locator(web_element=web_element,
-                                                                        locator_string=locator_string,
-                                                                        element_type=element_type,
-                                                                        parent_locator_string=parent_locator_string,
-                                                                        parent_element_type=parent_element_type
-                                                                        )
+        xpath_to_check, par_el, par_type = self._construct_xpath_locator(web_element=web_element,
+                                                                         locator_string=locator_string,
+                                                                         element_type=element_type,
+                                                                         parent_locator_string=parent_locator_string,
+                                                                         parent_element_type=parent_element_type
+                                                                         )
         reasons_to_break = ["//head", "//body", "//html"]
 
         if any(ele in str(locator_string) for ele in reasons_to_break):
             self.logger.info("Reached the top of the doc! Cannot find unique id")
             return ""
-        elif self.is_unique_locator(locator=xpath_to_check, locator_type="xpath"):
+        elif self._is_unique_locator(locator=xpath_to_check, locator_type="xpath"):
             return locator_string
         else:
             try:
                 par_loc_str = par_el.findParent()['class']
             except KeyError:
                 par_loc_str = "0"
-            return self.recursive_reverse_search_locators(web_element=par_el,
-                                                          locator_string=xpath_to_check,
-                                                          element_type=par_type,
-                                                          parent_locator_string=par_loc_str,
-                                                          parent_element_type=par_el.findParent().name
-                                                          )
+            return self._recursive_reverse_search_locators(web_element=par_el,
+                                                           locator_string=xpath_to_check,
+                                                           element_type=par_type,
+                                                           parent_locator_string=par_loc_str,
+                                                           parent_element_type=par_el.findParent().name
+                                                           )
 
-    def construct_xpath_locator(self, web_element: PageElement, locator_string=None, element_type: str = "div",
-                                parent_locator_string="", parent_element_type: str = "div"):
+    def _construct_xpath_locator(self, web_element: PageElement, locator_string=None, element_type: str = "div",
+                                 parent_locator_string="", parent_element_type: str = "div"):
         """
         Constructs a str ready to be written to file
         @param web_element:
@@ -189,7 +190,7 @@ class Locators:
         self.logger.debug(res)
         return res, parent_element, parent_element_type
 
-    def is_unique_locator(self, locator: str, locator_type: str = 'id') -> bool:
+    def _is_unique_locator(self, locator: str, locator_type: str = 'id') -> bool:
         """
         Checks if the provided locator identifies uniquely a web element
         @param locator: any type of locator
@@ -203,7 +204,7 @@ class Locators:
             self.logger.info(f"element with locator: {locator} and locator_type: {locator_type} is NOT unique.")
             return False
 
-    def format_filename(self, text: str) -> str:
+    def _format_filename(self, text: str) -> str:
         """
         Takes a string (intended use is url) and returns a valid filename constructed from the string.
         Uses a whitelist approach: any characters not present in valid_chars are removed.
@@ -231,7 +232,7 @@ class Locators:
         return filename + "page"
 
     @staticmethod
-    def to_camel_case(text: str) -> str:
+    def _to_camel_case(text: str) -> str:
         """
         Replaces the '-' character to '_' and returns the text in came case format
         @param text: the text to change
@@ -243,7 +244,7 @@ class Locators:
             return text
         return ''.join(i.capitalize() for i in s[0:])
 
-    def create_file(self, filename: str = "") -> str:
+    def _create_file(self, filename: str = "") -> str:
         """
         Creates a .py file with the provided file name
         @param filename: name of the file to be created. If it already exists adds _.
@@ -263,7 +264,7 @@ class Locators:
         except Exception as e:
             self.logger.error(f"Failed to create file: {filename}. {str(e)}")
 
-    def write_to_python_file(self, locator_dict: dict, file_name: str):
+    def _write_to_python_file(self, locator_dict: dict, file_name: str):
         """
         Creates and write the locator dictionary to a file with ending .py
         @param locator_dict: all the locators that are meant to be written to the file
@@ -276,7 +277,7 @@ class Locators:
 
         locator_template = "_{0}_{1} = \"{2}\"\n"
 
-        with open(self.create_file(file_name), "a") as file_to_write:
+        with open(self._create_file(file_name), "a") as file_to_write:
             file_to_write.write(python_file_template)
             if len(locator_dict) > 0:
                 for locator_type in locator_dict:
@@ -288,7 +289,7 @@ class Locators:
             file_to_write.close()
 
     @staticmethod
-    def add_contains_text(text: str) -> str:
+    def _add_contains_text(text: str) -> str:
         """
         simple function to construct the contains text locator with the str provided
         @param text: the str to add to the locator

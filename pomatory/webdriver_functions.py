@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 
+# TODO: add more options (e.g. CSS_SELECTOR)
 locator_types = {
     "id": By.ID,
     "xpath": By.XPATH,
@@ -17,9 +18,9 @@ class WebDriverFunctions:
         if web_driver:
             self.driver = web_driver
         else:
-            self.set_up_webdriver(args)
+            self._set_up_webdriver(args)
 
-    def set_up_webdriver(self, args):
+    def _set_up_webdriver(self, args):
         self.logger.info("Starting set up of webdriver")
 
         if args.get("browser") == 'chrome':
@@ -31,7 +32,7 @@ class WebDriverFunctions:
 
         elif args.get("browser") == 'firefox':
             self.driver = webdriver.Firefox()
-        # TODO: add later
+        # TODO: add edge support
         # elif preferred_browser == 'edge':
         #     driver = webdriver.Edge()
         else:
@@ -46,12 +47,6 @@ class WebDriverFunctions:
         # if request.cls is not None:
         #     request.cls.driver = driver
         #     request.cls.logger = logging
-
-        # yield driver
-        #
-        # # cleaning up after the test suite run
-        # driver.quit()
-
     def get_list_of_elements(self, locator: str, locator_type: str = "id") -> list:
         """
         Finds all elements that have the specific locator and returns them as a list

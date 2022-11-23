@@ -1,7 +1,7 @@
 import logging
 from pomatory.locators import Locators as Loc
 from pomatory.webdriver_functions import WebDriverFunctions as webDriver
-from pomatory.setup_logger import Logger
+from pomatory.logger import Logger
 import os
 
 
@@ -12,12 +12,11 @@ class Pomatory:
         if types is None:
             types = ['input', 'button']
 
-        # required
         self.save_path = save_path
         self.types = types
         self.url = url  # webdriver related
         self.browser = browser  # webdriver related
-        self.logger = self.setup_logger(log_level=log_level, verbose=verbose, quiet=quiet)
+        self.logger = self._setup_logger(log_level=log_level, verbose=verbose, quiet=quiet)
         self.return_single = return_single
         self.check_ids = check_ids
         self.username = username  # webdriver related
@@ -25,10 +24,8 @@ class Pomatory:
 
         if driver:
             self.driver_instance = webDriver(logger=self.logger, web_driver=driver)
-            # self.driver = self.driver_instance.driver
         else:
             self.driver_instance = webDriver(logger=self.logger, args={"browser": self.browser, "url": self.url})
-            # self.driver = self.driver_instance.driver
 
     def find_locators(self):
         loc = Loc(log=self.logger, driver_instance=self.driver_instance)
@@ -36,7 +33,7 @@ class Pomatory:
                           html_element_types=self.types)
 
     @staticmethod
-    def setup_logger(log_level=logging.INFO, verbose=False, quiet=False):
+    def _setup_logger(log_level=logging.INFO, verbose=False, quiet=False):
         """
         TODO: add logic for better logging here
         :param log_level:

@@ -84,25 +84,19 @@ def main():
                         )
 
     if not parser.parse_args().base_url:
-        sys.stderr.write("Please provide a url for POMatory")
+        sys.stderr.write("Please provide a starting url for POMatory")
         sys.exit(1)
-    run(parser.parse_args())
 
-
-def run(args):
-
-    # driver_functions = WebDriverFunctions(logger=logger, args=args)
-    Pomatory(save_path=args.save_path,
-             return_single=args.single_locator,
-             types=args.html_element_to_look_for_ids,
-             url=args.base_url,
-             browser=args.browser,
-             username=args.username,
-             password=args.password,
-             verbose=args.verbose,
-             quiet=args.quiet)
-
-    # clean_up(driver_functions.driver)
+    Pomatory(save_path=parser.parse_args().save_path,
+             return_single=parser.parse_args().single_locator,
+             types=parser.parse_args().html_element_to_look_for_ids,
+             url=parser.parse_args().base_url,
+             browser=parser.parse_args().browser,
+             username=parser.parse_args().username,
+             password=parser.parse_args().password,
+             verbose=parser.parse_args().verbose,
+             quiet=parser.parse_args().quiet
+             )
 
 
 def clean_up(driver_functions):
@@ -114,5 +108,6 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
+        # TODO: add call to clean_up()
         sys.stderr.write("User interrupt!\n")
         sys.exit(0)
