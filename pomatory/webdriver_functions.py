@@ -9,26 +9,27 @@ locator_types = {
 
 
 class WebDriverFunctions:
-    driver = None
+    driver = webdriver
 
-    def __init__(self, logger, web_driver="", args=None):
+    def __init__(self, logger, web_driver=None, args=None):
+
         self.logger = logger
         if web_driver:
             self.driver = web_driver
         else:
             self.set_up_webdriver(args)
 
-    def set_up_webdriver(self, args=None):
+    def set_up_webdriver(self, args):
         self.logger.info("Starting set up of webdriver")
 
-        if args.browser == 'chrome':
+        if args.get("browser") == 'chrome':
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             # chrome_options.add_argument('--remote-debugging-port=9222')
             self.driver = webdriver.Chrome(options=chrome_options)
 
-        elif args.browser == 'firefox':
+        elif args.get("browser") == 'firefox':
             self.driver = webdriver.Firefox()
         # TODO: add later
         # elif preferred_browser == 'edge':
@@ -38,9 +39,10 @@ class WebDriverFunctions:
 
         self.driver.set_page_load_timeout(20)
         self.driver.implicitly_wait(5)
-        self.driver.get(str(args.base_url))
+        self.driver.get(str(args.get("url")))
         self.driver.maximize_window()
 
+        # TODO: needed for standalone version
         # if request.cls is not None:
         #     request.cls.driver = driver
         #     request.cls.logger = logging
