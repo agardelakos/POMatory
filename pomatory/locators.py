@@ -32,10 +32,12 @@ class Locators:
         # finding/constructing xpaths
         xpaths_list = self._retrieve_xpaths(html_element_types, soup)
         self.logger.info(f"XPATHs_list: {str(xpaths_list)}")
+        self.logger.info("edw: " + str(save_path))
 
         # Writing to file
         self._write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
-                                   file_name=self._format_filename(self.driver_inst.get_current_url()))
+                                   file_name=self._format_filename(self.driver_inst.get_current_url()),
+                                   save_path=save_path)
 
     def _retrieve_ids(self, html_element_to_look_for_ids, soup) -> list:
         """
@@ -264,23 +266,24 @@ class Locators:
         except Exception as e:
             self.logger.error(f"Failed to create file: {filename}. {str(e)}")
 
-    def _write_to_python_file(self, locator_dict: dict, file_name: str):
+    def _write_to_python_file(self, locator_dict: dict, file_name: str, save_path: str = os.getcwd()):
         """
         Creates and write the locator dictionary to a file with ending .py
         @param locator_dict: all the locators that are meant to be written to the file
         @param file_name: name of the file to create. Can be path to file + name
+        @parm save_path: directory for the output file to be saved
         :return: nothing
         """
 
-        # TODO: add type of locator in the text below (and logic to differentiate
         python_file_template = "\"\"\" {0} Locators \"\"\"\n"
 
         locator_template = "_{0}_{1} = \"{2}\"\n"
-
-        with open(self._create_file(file_name), "a") as file_to_write:
-            file_to_write.write(python_file_template)
+        file_path = os.path.join(save_path, self._create_file(file_name))
+        self.logger.info("test: " + str(file_path))
+        with open(file_path, "a") as file_to_write:
             if len(locator_dict) > 0:
                 for locator_type in locator_dict:
+                    file_to_write.write(python_file_template.format(locator_type))
                     for element in locator_dict[locator_type]:
                         # TODO: add better locator naming
                         file_to_write.write(
