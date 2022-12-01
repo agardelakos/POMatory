@@ -11,7 +11,7 @@ class Locators:
         self.logger = log.logger
         self.driver = self.driver_inst.driver
 
-    # TODO: add logic for save_path and return_single
+    # TODO: add logic for return_single
     def find_locators(self, check_ids: bool = True, html_element_types: list = None, save_path: str = "",
                       return_single: bool = False):
         self.logger.info("test")
@@ -246,7 +246,7 @@ class Locators:
             return text
         return ''.join(i.capitalize() for i in s[0:])
 
-    def _create_file(self, filename: str = "") -> str:
+    def _create_file(self, filename: str = "", file_path: str = "") -> str:
         """
         Creates a .py file with the provided file name
         @param filename: name of the file to be created. If it already exists adds _.
@@ -256,7 +256,10 @@ class Locators:
         from os.path import exists
 
         try:
-            cur_file_path = os.path.dirname(os.path.abspath(__file__))
+            if file_path is None:
+                cur_file_path = os.path.dirname(os.path.abspath(__file__))
+            else:
+                cur_file_path = file_path
             path = os.path.join(cur_file_path, filename)
             while exists(path + ".py"):
                 path = path + "_"
@@ -278,7 +281,7 @@ class Locators:
         python_file_template = "\"\"\" {0} Locators \"\"\"\n"
 
         locator_template = "_{0}_{1} = \"{2}\"\n"
-        file_path = os.path.join(save_path, self._create_file(file_name))
+        file_path = os.path.join(save_path, self._create_file(filename=file_name, file_path=save_path))
         self.logger.info("test: " + str(file_path))
         with open(file_path, "a") as file_to_write:
             if len(locator_dict) > 0:
