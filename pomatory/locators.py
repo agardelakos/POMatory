@@ -14,7 +14,6 @@ class Locators:
     # TODO: add logic for return_single
     def find_locators(self, check_ids: bool = True, html_element_types: list = None, save_path: str = "",
                       return_single: bool = False):
-        self.logger.info("test")
 
         if html_element_types is None:
             # TODO: needs refactoring in order to search for 'div' as well.
@@ -32,7 +31,6 @@ class Locators:
         # finding/constructing xpaths
         xpaths_list = self._retrieve_xpaths(html_element_types, soup)
         self.logger.info(f"XPATHs_list: {str(xpaths_list)}")
-        self.logger.info("edw: " + str(save_path))
 
         # Writing to file
         self._write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
@@ -282,7 +280,6 @@ class Locators:
 
         locator_template = "_{0}_{1} = \"{2}\"\n"
         file_path = os.path.join(save_path, self._create_file(filename=file_name, file_path=save_path))
-        self.logger.info("test: " + str(file_path))
         with open(file_path, "a") as file_to_write:
             if len(locator_dict) > 0:
                 for locator_type in locator_dict:
