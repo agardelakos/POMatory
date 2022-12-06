@@ -14,7 +14,15 @@ class Locators:
     # TODO: add logic for return_single
     def find_locators(self, check_ids: bool = True, html_element_types: list = None, save_path: str = "",
                       return_single: bool = False):
+        """
+        Main entry point to find locators
 
+        @:param check_ids: Check IDs or not. Usually False is used for debug purposes
+        @:param html_element_types: The types of the html element types to look for locators. e.g. input, button,...
+        @:param save_path: The directory to save the created file
+        @:param return_single: Write all locators for an element as single entries or list
+        @:return: None
+        """
         if html_element_types is None:
             # TODO: needs refactoring in order to search for 'div' as well.
             html_element_types = ['input', 'button']  # , 'div']
@@ -35,13 +43,14 @@ class Locators:
         # Writing to file
         self._write_to_python_file(locator_dict={"id": id_list, "xpath": xpaths_list},
                                    file_name=self._format_filename(self.driver_inst.get_current_url()),
-                                   save_path=save_path)
+                                   save_path=save_path, return_single=return_single)
 
     def _retrieve_ids(self, html_element_to_look_for_ids, soup) -> list:
         """
-        Finding ids
-        @param html_element_to_look_for_ids:
-        @param soup:
+        Retrieve ids
+
+        @:param html_element_to_look_for_ids:
+        @:param soup: A bs4 object
         :return: list with ids
         """
         id_list = []
@@ -57,12 +66,12 @@ class Locators:
                     self.logger.info(f"No key found for: {el}")
         return id_list
 
-    def _retrieve_xpaths(self, html_element_to_look_for_ids, soup) -> list:
+    def _retrieve_xpaths(self, html_element_to_look_for_ids: list, soup) -> list:
         """
         Finding/constructing xpaths
 
-        @param html_element_to_look_for_ids:
-        @param soup:
+        @:param html_element_to_look_for_ids:
+        @:param soup: A bs4 object
         :return: list with xpaths
         """
         xpaths_list = []
@@ -112,13 +121,15 @@ class Locators:
     def _recursive_reverse_search_locators(self, locator_string: str, element_type: str, web_element: PageElement,
                                            parent_locator_string: str = None, parent_element_type: str = None) -> str:
         """
+        Recursively add higher in DOM hierarchy html elements, until a unique locator is found or one of the
+        reasons_to_break are reached
 
-        @param locator_string:
-        @param element_type:
-        @param web_element:
-        @param parent_locator_string:
-        @param parent_element_type:
-        :return:
+        @:param locator_string: the initial locator
+        @:param element_type: the type of the element we are investigating
+        @:param web_element: The web element the investigation begins with
+        @:param parent_locator_string: The fist parent of the locator_string
+        @:param parent_element_type: The type of the parent of the locator_string
+        :return: A string with the unique locator or empty
         """
 
         xpath_to_check, par_el, par_type = self._construct_xpath_locator(web_element=web_element,
@@ -150,12 +161,13 @@ class Locators:
                                  parent_locator_string="", parent_element_type: str = "div"):
         """
         Constructs a str ready to be written to file
-        @param web_element:
-        @param parent_element_type: the parent's WebElement type (e.g. div, button, input)
-        @param parent_locator_string: can be list or str. to be added on the front of the xpath with the usual format
-        @param locator_string: the str for the class. can be list or single str. Will add this in the usual format of
+
+        @:param web_element: the web element to construct the xpath locator for
+        @:param parent_element_type: the parent's WebElement type (e.g. div, button, input)
+        @:param parent_locator_string: can be list or str. to be added on the front of the xpath with the usual format
+        @:param locator_string: the str for the class. can be list or single str. Will add this in the usual format of
         locators
-        @param element_type: the WebElement type (e.g. div, button, input)
+        @:param element_type: the WebElement type (e.g. div, button, input)
         :return: A str and a PageElement of the parent with that is ready to be used as a locator
         """
         xpath_locator_format = "//{}[@class=\'{}\']"
@@ -193,8 +205,9 @@ class Locators:
     def _is_unique_locator(self, locator: str, locator_type: str = 'id') -> bool:
         """
         Checks if the provided locator identifies uniquely a web element
-        @param locator: any type of locator
-        @param locator_type: locator_type supported are described in locator_types dict in webdriver_functions.py
+
+        @:param locator: any type of locator
+        @:param locator_type: locator_type supported are described in locator_types dict in webdriver_functions.py
         :return:
         """
         if len(self.driver_inst.get_list_of_elements(locator, locator_type)) == 1:
@@ -209,7 +222,8 @@ class Locators:
         Takes a string (intended use is url) and returns a valid filename constructed from the string.
         Uses a whitelist approach: any characters not present in valid_chars are removed.
         Also, spaces are replaced with underscores. TODO: duplicate from to_camel_case()?
-        @param text: str to format
+
+        @:param text: str to format
         :return: a str that is ready to be used as a filename TODO: move concat of 'page' elsewhere
         """
         filename_parts = text.split('/')
@@ -235,7 +249,8 @@ class Locators:
     def _to_camel_case(text: str) -> str:
         """
         Replaces the '-' character to '_' and returns the text in came case format
-        @param text: the text to change
+
+        @:param text: the text to change
         :return: str in the camel case format
         """
         s = text.replace("-", " ").replace("_", " ")
@@ -247,7 +262,8 @@ class Locators:
     def _create_file(self, filename: str = "", file_path: str = "") -> str:
         """
         Creates a .py file with the provided file name
-        @param filename: name of the file to be created. If it already exists adds _.
+
+        @:param filename: name of the file to be created. If it already exists adds _.
         TODO: maybe remove and instead write to the existing file
         :return: a str with the path of the file (including the ending of the file)
         """
@@ -267,12 +283,16 @@ class Locators:
         except Exception as e:
             self.logger.error(f"Failed to create file: {filename}. {str(e)}")
 
-    def _write_to_python_file(self, locator_dict: dict, file_name: str, save_path: str = os.getcwd()):
+    def _write_to_python_file(self, locator_dict: dict, file_name: str, return_single: bool = False,
+                              save_path: str = os.getcwd()):
         """
         Creates and write the locator dictionary to a file with ending .py
-        @param locator_dict: all the locators that are meant to be written to the file
-        @param file_name: name of the file to create. Can be path to file + name
-        @parm save_path: directory for the output file to be saved
+
+        @:param locator_dict: all the locators that are meant to be written to the file
+        @:param file_name: name of the file to create. Can be path to file + name
+        @:param save_path: directory for the output file to be saved
+        TODO: add support for return_single
+        @:param return_single: write single entries or all locators of an element
         :return: nothing
         """
 
@@ -295,7 +315,8 @@ class Locators:
     def _add_contains_text(text: str) -> str:
         """
         simple function to construct the contains text locator with the str provided
-        @param text: the str to add to the locator
+
+        @:param text: the str to add to the locator
         :return: str with the proper format of the locator
         """
         return "[contains(text(), \'{}\')]".format(text)

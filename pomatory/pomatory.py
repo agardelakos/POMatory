@@ -26,6 +26,7 @@ class Pomatory:
             self.driver_instance = webDriver(logger=self.logger, web_driver=driver)
         else:
             self.driver_instance = webDriver(logger=self.logger, args={"browser": self.browser, "url": self.url})
+        self.find_locators()
 
     def find_locators(self):
         loc = Loc(log=self.logger, driver_instance=self.driver_instance)
@@ -36,10 +37,13 @@ class Pomatory:
     def _setup_logger(log_level=logging.INFO, verbose=False, quiet=False):
         """
         TODO: add logic for better logging here
-        :param log_level:
-        :param verbose:
-        :param quiet:
-        :return:
+        Sets up the logger instance that is going to be used in the run
+
+        :param log_level: "logging" level
+        TODO: do verbose and quiet are really needed?
+        :param verbose: use verbose logging
+        :param quiet: log only critical entries
+        :return: Logger instance
         """
         if not log_level:
             if verbose:

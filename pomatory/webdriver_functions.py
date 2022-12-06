@@ -21,8 +21,6 @@ class WebDriverFunctions:
             self._set_up_webdriver(args)
 
     def _set_up_webdriver(self, args):
-        self.logger.info("Starting set up of webdriver")
-
         if args.get("browser") == 'chrome':
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_argument('--no-sandbox')
@@ -50,6 +48,7 @@ class WebDriverFunctions:
     def get_list_of_elements(self, locator: str, locator_type: str = "id") -> list:
         """
         Finds all elements that have the specific locator and returns them as a list
+
         :param locator: any type of locator
         :param locator_type: locator_type supported are described in locator_types dict
         :return: a list with all elements that can be found with the specific locator
@@ -59,6 +58,7 @@ class WebDriverFunctions:
     def get_text_of_elements(self, locator: str, locator_type: str = "id") -> list:
         """
         Finds all element texts that have the specific locator and returns them as a list
+
         :param locator: any type of locator
         :param locator_type: locator_type supported are described in locator_types dict
         :return: a list with all texts that can be found with the specific locator. "0" if no texts found
@@ -74,6 +74,7 @@ class WebDriverFunctions:
     def get_current_url(self) -> str:
         """
         Gets the current url from the web driver provided
+
         :return: a str with the current url
         """
         return self.driver.current_url

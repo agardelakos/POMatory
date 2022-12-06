@@ -4,7 +4,7 @@ Automatically find locators for web elements that can be used in selenium projec
 ## Installation
 2 ways to use POMatory: 
  - Import POMatory as a library in your code
- - Install POMatory locally with `pip install .`.Then run it with `pomatory` and  
+ - [_WIP: bugs lurking_] Install POMatory locally with `pip install .`.Then run it with `pomatory` and  
 by passing any desired __Running Arguments__
 
 ### Running Arguments
